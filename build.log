@@ -1,0 +1,42 @@
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+ ⨯ ESLint: Invalid Options: - Unknown options: useEslintrc, extensions - 'extensions' has been removed.
+   Collecting page data ...
+   Generating static pages (0/10) ...
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+   Generating static pages (2/10) 
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+   Generating static pages (4/10) 
+   Generating static pages (7/10) 
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Generating static pages (10/10) 
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    6.2 kB         86.6 kB
+├ ○ /_not-found                          882 B          81.3 kB
+├ ○ /api/health                          0 B                0 B
+├ λ /api/webhook/telegram                0 B                0 B
+├ λ /api/webhook/whatsapp                0 B                0 B
+├ ○ /dashboard                           7.1 kB         87.5 kB
+├ ○ /privacy                             140 B          80.6 kB
+└ ○ /terms-of-service                    141 B          80.6 kB
++ First Load JS shared by all            80.4 kB
+  ├ chunks/472-18077ba0c02169f9.js       27.5 kB
+  ├ chunks/fd9d1056-1aff9582ba5dd452.js  50.9 kB
+  ├ chunks/main-app-4b5c74d2e4976b83.js  231 B
+  └ chunks/webpack-561e08a7a64c3705.js   1.78 kB
+
+
+λ  (Server)  server-side renders at runtime (uses getInitialProps or getServerSideProps)
+○  (Static)  automatically rendered as static HTML (uses no initial props)
+

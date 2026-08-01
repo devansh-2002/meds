@@ -1,0 +1,93 @@
+{
+  "sessions": {},
+  "demoDoses": {
+    "1078657566": [
+      {
+        "id": 1,
+        "name": "Thyronorm 50mcg",
+        "time": "6:30 AM",
+        "status": "taken",
+        "logTime": "6:32 AM",
+        "alertSent": true,
+        "inventory": 30
+      },
+      {
+        "id": 2,
+        "name": "Metformin 500mg",
+        "time": "8:00 AM",
+        "status": "taken",
+        "logTime": "8:05 AM",
+        "alertSent": true,
+        "inventory": 30
+      },
+      {
+        "id": 3,
+        "name": "Amlodipine 5mg",
+        "time": "8:00 AM",
+        "status": "taken",
+        "logTime": "8:05 AM",
+        "alertSent": true,
+        "inventory": 30
+      },
+      {
+        "id": 4,
+        "name": "Dolo 650",
+        "time": "2:00 PM",
+        "status": "taken",
+        "logTime": "3:19 PM",
+        "alertSent": false,
+        "inventory": 30
+      },
+      {
+        "id": 5,
+        "name": "Metformin 500mg",
+        "time": "8:00 PM",
+        "status": "taken",
+        "logTime": "3:49 PM",
+        "alertSent": false,
+        "inventory": 29
+      },
+      {
+        "id": 1779018215847,
+        "name": "telvoc 40mg",
+        "time": "12:00",
+        "status": "pending",
+        "logTime": null,
+        "alertSent": false,
+        "inventory": "0",
+        "dosage": ""
+      },
+      {
+        "id": 1779022376096,
+        "name": "Amplopress 3 mg - 1 (After Food)",
+        "time": "8 pm",
+        "status": "pending",
+        "logTime": null,
+        "alertSent": false,
+        "inventory": 10
+      },
+      {
+        "id": 1779026331638,
+        "name": "Amlodipine - half tablet (After Food)",
+        "time": "9:30 PM",
+        "status": "pending",
+        "logTime": null,
+        "alertSent": false,
+        "inventory": 10
+      },
+      {
+        "id": 1780994044467,
+        "name": "meftal - 1 (After Food)",
+        "time": "5 pm",
+        "status": "pending",
+        "logTime": null,
+        "alertSent": false,
+        "duration": null,
+        "inventory": null
+      }
+    ]
+  },
+  "userPrefs": {
+    "1078657566": "en"
+  }
+}
