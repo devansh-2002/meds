@@ -44,70 +44,76 @@ async function writeDB(data) {
 export async function GET() {
   try {
     if (supabase) {
-      // 1. Fetch from Supabase
-      const { data: patients, error: pErr } = await supabase.from('patients').select('*');
-      if (pErr) throw pErr;
-      
-      const { data: medications, error: mErr } = await supabase.from('medications').select('*');
-      if (mErr) throw mErr;
-      
-      const { data: schedules, error: sErr } = await supabase.from('schedules').select('*');
-      if (sErr) throw sErr;
-      
-      const { data: doses, error: dErr } = await supabase.from('doses_log').select('*');
-      if (dErr) throw dErr;
-
-      // Transform relational data into the format the dashboard expects (for backward compatibility)
-      const demoDoses = {};
-      const userPrefs = {};
-      
-      for (const p of patients) {
-        demoDoses[p.phone] = [];
-        userPrefs[p.phone] = p.language;
-      }
-
-      // Pre-compute daysConsumed per medication (distinct calendar days with 'taken' status)
-      const daysConsumedMap = {};
-      for (const d of doses) {
-        if (d.status === "taken" && d.scheduled_datetime) {
-          const day = new Date(d.scheduled_datetime).toISOString().slice(0, 10);
-          if (!daysConsumedMap[d.medication_id]) daysConsumedMap[d.medication_id] = new Set();
-          daysConsumedMap[d.medication_id].add(day);
-        }
-      }
-      
-      for (const d of doses) {
-        const med = medications.find(m => m.id === d.medication_id);
-        const sched = schedules.find(s => s.medication_id === med?.id);
-        const patient = patients.find(p => p.id === med?.patient_id);
+      try {
+        // 1. Fetch from Supabase
+        const { data: patients, error: pErr } = await supabase.from('patients').select('*');
+        if (pErr) throw pErr;
         
-        if (patient && med) {
-          const daysConsumed = daysConsumedMap[med.id]?.size ?? 0;
+        const { data: medications, error: mErr } = await supabase.from('medications').select('*');
+        if (mErr) throw mErr;
+        
+        const { data: schedules, error: sErr } = await supabase.from('schedules').select('*');
+        if (sErr) throw sErr;
+        
+        const { data: doses, error: dErr } = await supabase.from('doses_log').select('*');
+        if (dErr) throw dErr;
 
-          demoDoses[patient.phone].push({
-            id: d.id,
-            name: med.name,
-            time: sched ? sched.scheduled_time.substring(0, 5) : '00:00', // simple HH:MM
-            status: d.status,
-            logTime: d.logged_datetime ? new Date(d.logged_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : null,
-            inventory: med.inventory,
-            dosage: med.dosage,
-            duration: med.duration,      // prescription length in days (null = continuous)
-            daysConsumed,                // distinct taken days so far
+        if (patients) {
+          // Transform relational data into the format the dashboard expects (for backward compatibility)
+          const demoDoses = {};
+          const userPrefs = {};
+          
+          for (const p of patients) {
+            demoDoses[p.phone] = [];
+            userPrefs[p.phone] = p.language;
+          }
+
+          // Pre-compute daysConsumed per medication (distinct calendar days with 'taken' status)
+          const daysConsumedMap = {};
+          for (const d of doses || []) {
+            if (d.status === "taken" && d.scheduled_datetime) {
+              const day = new Date(d.scheduled_datetime).toISOString().slice(0, 10);
+              if (!daysConsumedMap[d.medication_id]) daysConsumedMap[d.medication_id] = new Set();
+              daysConsumedMap[d.medication_id].add(day);
+            }
+          }
+          
+          for (const d of doses || []) {
+            const med = (medications || []).find(m => m.id === d.medication_id);
+            const sched = (schedules || []).find(s => s.medication_id === med?.id);
+            const patient = patients.find(p => p.id === med?.patient_id);
+            
+            if (patient && med) {
+              const daysConsumed = daysConsumedMap[med.id]?.size ?? 0;
+
+              demoDoses[patient.phone].push({
+                id: d.id,
+                name: med.name,
+                time: sched ? sched.scheduled_time.substring(0, 5) : '00:00', // simple HH:MM
+                status: d.status,
+                logTime: d.logged_datetime ? new Date(d.logged_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : null,
+                inventory: med.inventory,
+                dosage: med.dosage,
+                duration: med.duration,      // prescription length in days (null = continuous)
+                daysConsumed,                // distinct taken days so far
+              });
+            }
+          }
+          
+          return NextResponse.json({ sessions: {}, demoDoses, userPrefs }, {
+            headers: { "Cache-Control": "no-store" },
           });
         }
+      } catch (sbErr) {
+        console.warn("Supabase fetch failed, falling back to local data.json:", sbErr?.message || sbErr);
       }
-      
-      return NextResponse.json({ sessions: {}, demoDoses, userPrefs }, {
-        headers: { "Cache-Control": "no-store" },
-      });
-    } else {
-      // 2. Fallback to Local JSON
-      const data = await readDB();
-      return NextResponse.json(data, {
-        headers: { "Cache-Control": "no-store" },
-      });
     }
+
+    // 2. Fallback to Local JSON
+    const data = await readDB();
+    return NextResponse.json(data, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (error) {
     console.error("Dashboard GET error:", error);
     return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });

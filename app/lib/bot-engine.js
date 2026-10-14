@@ -257,6 +257,32 @@ async function updatePendingDose(phone, status) {
   return { done: true };
 }
 
+// Helper to update local JSON inventory when marked taken via fallback
+function updateLocalInventory(phone, doseId) {
+  try {
+    const raw = fs.readFileSync(DB_PATH, 'utf-8');
+    const data = JSON.parse(raw);
+    const doses = data.demoDoses?.[phone];
+    if (doses) {
+      const target = doses.find(d => String(d.id) === String(doseId));
+      if (target) {
+        target.status = 'taken';
+        target.logTime = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        if (target.inventory && target.inventory > 0) {
+          target.inventory -= 1;
+        }
+        const tempPath = `${DB_PATH}.tmp`;
+        fs.writeFileSync(tempPath, JSON.stringify(data, null, 2));
+        fs.renameSync(tempPath, DB_PATH);
+        return target.inventory;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to update local inventory:', e);
+  }
+  return null;
+}
+
 async function checkDuplicate(phone, medName, time) {
   if (!supabase) return false;
   const { data: patient } = await supabase.from('patients').select('id').eq('phone', phone).single();

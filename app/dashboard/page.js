@@ -217,7 +217,7 @@ export default function DashboardPage() {
           const newPatients = Object.keys(data.demoDoses).map((phone, idx) => ({ id: phone, name: `Patient ${idx + 1}`, phone }));
           if (newPatients.length > 0) {
             setPatients(newPatients);
-            if (!newPatients.find(p => p.id === selectedPatient)) setSelectedPatient(newPatients[0].id);
+            setSelectedPatient(prev => (newPatients.some(p => p.id === prev) ? prev : newPatients[0].id));
           }
           const newMeds = {};
           Object.entries(data.demoDoses).forEach(([phone, doses]) => {
@@ -257,7 +257,7 @@ export default function DashboardPage() {
     fetchLiveDB();
     const interval = setInterval(fetchLiveDB, 3000); 
     return () => { isMounted = false; clearInterval(interval); };
-  }, [selectedPatient, dbKey]);
+  }, [dbKey]);
 
   const [showAddMed, setShowAddMed] = useState(false);
   const [editMed, setEditMed] = useState(null);
@@ -400,6 +400,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {error && (
+        <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '12px 18px', borderRadius: '12px', marginBottom: '24px', fontSize: '14px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #fecaca' }}>
+          <span>⚠️ {error}</span>
+          <button className="btn btn-secondary" onClick={() => { setError(null); setDbKey(k => k + 1); }} style={{ fontSize: '12px', padding: '4px 12px', background: 'white' }}>Retry</button>
+        </div>
+      )}
+
       {lowPillMeds.length > 0 && (
         <div className="card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden', marginBottom: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
           <button onClick={() => setRestockExpanded(!restockExpanded)} style={{ background: 'none', border: 'none', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', cursor: 'pointer' }}>
@@ -441,6 +448,46 @@ export default function DashboardPage() {
         <Stat label={t?.adherenceRate} icon="target" value={`${avgAdherence}%`} extra={lang === 'en' ? 'This month' : 'इस महीने'} type={avgAdherence >= 80 ? "up" : "down"} />
         <Stat label={t?.currentStreak} icon="flame" value={`${streak} ${t?.days}`} extra={lang === 'en' ? 'Consecutive doses' : 'लगातार खुराक'} type="neutral" />
         <Stat label={t?.missedToday} icon="alert-circle" value={String(todayMissedCount)} extra={todayMissedCount > 0 ? t?.needsAttention : t?.allOnTrack} type={todayMissedCount > 0 ? "down" : "up"} />
+      </div>
+
+      {/* Visual Adherence Analytics Bar */}
+      <div className="card" style={{ padding: '24px', borderRadius: '16px', marginBottom: '32px', background: 'white', border: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--color-primary)' }}>
+              {lang === 'en' ? '📊 Adherence Progress Analytics' : '📊 अनुपालन प्रगति विश्लेषण'}
+            </h3>
+            <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>
+              {lang === 'en' ? 'Live breakdown of doses logged today across scheduled regimens' : 'आज के लिए निर्धारित खुराक का लाइव रिकॉर्ड'}
+            </p>
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: avgAdherence >= 80 ? '#10b981' : '#f59e0b' }}>
+            {avgAdherence}%
+          </div>
+        </div>
+
+        {/* Visual Progress Bar */}
+        <div style={{ width: '100%', height: '12px', background: '#f1f5f9', borderRadius: '6px', overflow: 'hidden', display: 'flex', marginBottom: '16px' }}>
+          <div style={{ width: `${totalCount > 0 ? (todayTakenCount / totalCount) * 100 : 0}%`, background: '#10b981', transition: 'width 0.4s ease' }} title="Taken" />
+          <div style={{ width: `${totalCount > 0 ? (todayMissedCount / totalCount) * 100 : 0}%`, background: '#ef4444', transition: 'width 0.4s ease' }} title="Missed" />
+          <div style={{ width: `${totalCount > 0 ? ((totalCount - todayTakenCount - todayMissedCount) / totalCount) * 100 : 0}%`, background: '#cbd5e1', transition: 'width 0.4s ease' }} title="Pending" />
+        </div>
+
+        {/* Legend metrics */}
+        <div style={{ display: 'flex', gap: '24px', fontSize: '12px', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }} />
+            <span style={{ color: '#334155' }}>{lang === 'en' ? 'Taken' : 'ली गई'}: <strong>{todayTakenCount}</strong></span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }} />
+            <span style={{ color: '#334155' }}>{lang === 'en' ? 'Missed' : 'छूटी'}: <strong>{todayMissedCount}</strong></span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#cbd5e1' }} />
+            <span style={{ color: '#334155' }}>{lang === 'en' ? 'Pending' : 'बाकी'}: <strong>{totalCount - todayTakenCount - todayMissedCount}</strong></span>
+          </div>
+        </div>
       </div>
 
       <div className="dash-content-grid">
