@@ -1,9 +1,7 @@
-import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
-import ws from 'ws';
 
 // Load environment variables for Telegram Token & Supabase
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,9 +12,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 if (!TOKEN) {
-  console.error("❌ CRITICAL ERROR: TELEGRAM_BOT_TOKEN is not set in .env.local!");
-  console.error("Cron cannot send messages without it. Exiting...");
-  process.exit(1);
+  console.warn("⚠️ WARNING: TELEGRAM_BOT_TOKEN is not set in .env.local. Telegram dispatches will be skipped.");
 }
 
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -24,9 +20,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  realtime: { transport: ws },
-});
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 console.log("⏰ DawaiSaathi Cron Worker Started...");
 console.log(`Monitoring Supabase for scheduled reminders...`);
@@ -92,25 +86,27 @@ setInterval(async () => {
     const med = schedule.medications;
     const patient = med.patients;
     
-    // Check if we already created a pending log for this medication today
-    const startOfDay = new Date();
-    startOfDay.setHours(0,0,0,0);
+    // Check if we already created a pending log for this medication in this minute window
+    const minuteStart = new Date(now);
+    minuteStart.setSeconds(0, 0);
+    const minuteEnd = new Date(minuteStart.getTime() + 60 * 1000);
     
     const { data: existingLog } = await supabase
       .from('doses_log')
       .select('id')
       .eq('medication_id', med.id)
-      .eq('scheduled_datetime', now.toISOString())
-      .single();
+      .gte('scheduled_datetime', minuteStart.toISOString())
+      .lt('scheduled_datetime', minuteEnd.toISOString())
+      .limit(1);
       
-    if (existingLog) continue; // Already processed
+    if (existingLog && existingLog.length > 0) continue; // Already processed
 
     // 2. Create the dose log
     const { data: logEntry, error: logError } = await supabase
       .from('doses_log')
       .insert({
         medication_id: med.id,
-        scheduled_datetime: now.toISOString(),
+        scheduled_datetime: minuteStart.toISOString(),
         status: 'pending',
         alert_sent: true
       })

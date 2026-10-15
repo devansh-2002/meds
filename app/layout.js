@@ -20,7 +20,11 @@ export const metadata = {
     type: "website",
     locale: "en_IN",
   },
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: "#0D9488",
 };
 

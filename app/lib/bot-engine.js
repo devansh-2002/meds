@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
-import ws from 'ws';
 
 /**
  * DawaiSaathi — Shared Conversation Engine (i18n)
@@ -23,9 +22,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env
 
 let supabase = null;
 if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    realtime: { transport: ws },
-  });
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
 // ---------------------------------------------------------------------------
@@ -255,32 +252,6 @@ async function updatePendingDose(phone, status) {
     }
   }
   return { done: true };
-}
-
-// Helper to update local JSON inventory when marked taken via fallback
-function updateLocalInventory(phone, doseId) {
-  try {
-    const raw = fs.readFileSync(DB_PATH, 'utf-8');
-    const data = JSON.parse(raw);
-    const doses = data.demoDoses?.[phone];
-    if (doses) {
-      const target = doses.find(d => String(d.id) === String(doseId));
-      if (target) {
-        target.status = 'taken';
-        target.logTime = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-        if (target.inventory && target.inventory > 0) {
-          target.inventory -= 1;
-        }
-        const tempPath = `${DB_PATH}.tmp`;
-        fs.writeFileSync(tempPath, JSON.stringify(data, null, 2));
-        fs.renameSync(tempPath, DB_PATH);
-        return target.inventory;
-      }
-    }
-  } catch (e) {
-    console.error('Failed to update local inventory:', e);
-  }
-  return null;
 }
 
 async function checkDuplicate(phone, medName, time) {
@@ -620,9 +591,9 @@ export async function processMessage(msg) {
           };
         }
 
+        const finalName = await addMedication(phone, { name: medName, dosage: medDosage, time: medTime, mealChoice, duration: medDuration, inventory: medInventory });
         delete sessions[phone];
         saveLocalState();
-        const finalName = await addMedication(phone, { name: medName, dosage: medDosage, time: medTime, mealChoice, duration: medDuration, inventory: medInventory });
         return { text: t.addMedSuccess(finalName || medName, medTime), buttons: backToMenuBtn };
       } else {
         return {
@@ -639,9 +610,9 @@ export async function processMessage(msg) {
     if (state.step === 'CONFIRM_DUPLICATE') {
       if (text === 'confirm_yes' || ['yes', 'हाँ', 'ya'].includes(text)) {
         const { medName, medDosage, medTime, mealChoice, medDuration, medInventory } = state;
+        const finalName = await addMedication(phone, { name: medName, dosage: medDosage, time: medTime, mealChoice, duration: medDuration, inventory: medInventory });
         delete sessions[phone];
         saveLocalState();
-        const finalName = await addMedication(phone, { name: medName, dosage: medDosage, time: medTime, mealChoice, duration: medDuration, inventory: medInventory });
         return { text: t.addMedSuccess(finalName || medName, medTime), buttons: backToMenuBtn };
       } else {
         delete sessions[phone];

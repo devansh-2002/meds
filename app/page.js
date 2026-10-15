@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import s from "./page.module.css";
 
 export default function LandingPage() {
@@ -16,10 +17,10 @@ export default function LandingPage() {
       {/* ═══════ HEADER ═══════ */}
       <header className={`${s.header} ${scrolled ? s.scrolled : ""}`}>
         <div className={s.headerInner}>
-          <a href="/" className={s.logo} id="logo-link">
+          <Link href="/" className={s.logo} id="logo-link">
             <div className={s.logoIcon}>💊</div>
             <div className={s.logoText}>Dawai<span>Saathi</span></div>
-          </a>
+          </Link>
 
           <nav className={s.nav}>
             <a href="#features">Features</a>
@@ -28,7 +29,7 @@ export default function LandingPage() {
           </nav>
 
           <div className={s.headerActions}>
-            <a href="/dashboard" className="btn btn-secondary btn-sm" id="nav-dashboard">Dashboard</a>
+            <Link href="/dashboard" className="btn btn-secondary btn-sm" id="nav-dashboard">Dashboard</Link>
             <a href="https://wa.me/919876543210?text=Hi%20DawaiSaathi" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm" id="nav-start">Start Free →</a>
           </div>
         </div>
@@ -63,9 +64,9 @@ export default function LandingPage() {
               <a href="https://t.me/DawaiSaathiBot" target="_blank" rel="noopener noreferrer" className="btn btn-telegram btn-lg" id="hero-cta-tg" style={{ background: '#0088cc', color: 'white' }}>
                 <TgIcon /> Telegram
               </a>
-              <a href="/dashboard" className="btn btn-secondary btn-lg" id="hero-cta-dash">
+              <Link href="/dashboard" className="btn btn-secondary btn-lg" id="hero-cta-dash">
                 Dashboard →
-              </a>
+              </Link>
             </div>
 
             <div className={s.heroProof}>
@@ -160,10 +161,10 @@ export default function LandingPage() {
         <div className={s.footerInner}>
           <div className={s.footerGrid}>
             <div className={s.footerAbout}>
-              <a href="/" className={s.logo}>
+              <Link href="/" className={s.logo}>
                 <div className={s.logoIcon}>💊</div>
                 <div className={s.logoText}>Dawai<span>Saathi</span></div>
-              </a>
+              </Link>
               <p>India&apos;s first WhatsApp-based medication adherence platform. Built for patients and their families.</p>
             </div>
             <div className={s.footerCol}>
@@ -171,12 +172,12 @@ export default function LandingPage() {
               <a href="#features">Features</a>
               <a href="#how-it-works">How It Works</a>
               <a href="#caregiver">For Caregivers</a>
-              <a href="/dashboard">Dashboard</a>
+              <Link href="/dashboard">Dashboard</Link>
             </div>
             <div className={s.footerCol}>
               <h4>Legal</h4>
-              <a href="/privacy">Privacy Policy</a>
-              <a href="/terms-of-service">Terms of Service</a>
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/terms-of-service">Terms of Service</Link>
               <a href="mailto:help@dawaisaathi.com">Contact Us</a>
             </div>
             <div className={s.footerCol}>

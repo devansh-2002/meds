@@ -1,16 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import fsSync from 'fs';
 import path from 'path';
-import ws from 'ws';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 // --- Configuration ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey, {
-  realtime: {
-    transport: ws,
-  },
-}) : null;
+const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 const DB_PATH = path.join(process.cwd(), 'data.json');
 
@@ -95,7 +95,7 @@ async function migrateData() {
       // 3. Create Schedule Record
       // Convert time like "8:00 AM" to "08:00:00"
       let timeVal = dose.time;
-      if (timeVal && timeVal.includes('AM') || timeVal.includes('PM')) {
+      if (timeVal && (timeVal.includes('AM') || timeVal.includes('PM'))) {
         let [timeStr, modifier] = timeVal.split(' ');
         let [hours, minutes] = timeStr.split(':');
         if (!minutes) minutes = '00';

@@ -57,16 +57,16 @@ export async function POST(request) {
     console.log(`[Bot] 💬 From: ${msg.phone} | Name: ${msg.name} | Text: "${msg.text}"`);
 
     // Process through conversation engine
-    const reply = processMessage(msg);
+    const reply = await processMessage(msg);
 
     // Send reply via the configured provider
     if (reply) {
       if (PROVIDER === "meta") {
-        sendMetaMessage(msg.phone, reply.text).catch(err => {
+        await sendMetaMessage(msg.phone, reply.text).catch(err => {
           console.error("[Webhook] Async sendMetaMessage failed:", err);
         });
       } else {
-        sendGupshupMessage(msg.phone, reply.text).catch(err => {
+        await sendGupshupMessage(msg.phone, reply.text).catch(err => {
           console.error("[Webhook] Async sendGupshupMessage failed:", err);
         });
       }

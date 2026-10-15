@@ -5,14 +5,16 @@ import { useState, useCallback, useEffect, useRef } from "react";
 /* HELPERS & CONSTANTS */
 function convertTo24(timeStr) {
   if (!timeStr) return "00:00";
-  let [time, modifier] = timeStr.split(' ');
+  let [time, modifier] = timeStr.trim().split(' ');
   let [hours, minutes] = time.split(':');
-  if (hours === '12') {
-    hours = modifier === 'PM' ? '12' : '00';
-  } else if (modifier === 'PM') {
-    hours = String(parseInt(hours, 10) + 12);
+  if (modifier) {
+    if (hours === '12') {
+      hours = modifier.toUpperCase() === 'PM' ? '12' : '00';
+    } else if (modifier.toUpperCase() === 'PM') {
+      hours = String(parseInt(hours, 10) + 12);
+    }
   }
-  return `${hours.padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}`;
+  return `${(hours || '00').padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}`;
 }
 
 function formatTime(timeStr) {
@@ -98,7 +100,8 @@ function getLogsForDate(date, patientId, medications, demoDosesMap) {
   });
   const isToday = date === new Date().toLocaleDateString('en-CA');
   if (isToday) return allDoses;
-  return allDoses.map(d => ({ ...d, status: Math.random() > 0.2 ? "taken" : "missed", logTime: "08:15 AM" }));
+  // For historical records without dedicated logs, return existing doses with their recorded status
+  return allDoses;
 }
 
 const DAYS_EN = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
@@ -295,10 +298,28 @@ export default function DashboardPage() {
   const selectedDateLabel = isToday ? t?.todayLabel : selectedDate;
   const DAYS = lang === "hi" ? DAYS_HI : DAYS_EN;
 
-  const addMedication = useCallback((med) => {
+  const addMedication = useCallback(async (med) => {
     const id = `m${nextId.current++}`;
     setMeds((prev) => ({ ...prev, [selectedPatient]: [...(prev[selectedPatient] || []), { ...med, id, adherence: 100 }] }));
     setShowAddMed(false);
+
+    try {
+      await fetch("/api/dashboard/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "medication",
+          phone: selectedPatient,
+          name: med.name,
+          dosage: med.dosage,
+          time: med.time,
+          inventory: med.inventory || 30
+        })
+      });
+      setDbKey(k => k + 1);
+    } catch (e) {
+      console.error("Failed to persist medication:", e);
+    }
   }, [selectedPatient]);
 
   const addPatient = async ({ name, phone }) => {

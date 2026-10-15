@@ -210,8 +210,6 @@
   border-top: 1px solid var(--color-border-light);
 }
 
-.proofItem {}
-
 .proofValue {
   font-family: var(--font-display);
   font-size: var(--text-2xl);

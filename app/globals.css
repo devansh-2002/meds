@@ -189,17 +189,6 @@ a {
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
-body {
-  background-color: var(--color-bg);
-  background-image: 
-    radial-gradient(at 0% 0%, hsla(160, 67%, 95%, 1) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, hsla(200, 80%, 96%, 1) 0, transparent 50%);
-  color: var(--color-text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
-}
-
 .timeline-bg {
   background: white;
   border-radius: var(--radius-lg);

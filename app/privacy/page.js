@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Privacy Policy — DawaiSaathi",
   description: "Minimal privacy policy for DawaiSaathi MVP.",
@@ -6,9 +8,9 @@ export const metadata = {
 export default function PrivacyPolicy() {
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "var(--space-16) var(--space-6)" }}>
-      <a href="/" style={{ fontSize: "var(--text-sm)", display: "inline-flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-8)", color: "var(--color-text-secondary)" }}>
+      <Link href="/" style={{ fontSize: "var(--text-sm)", display: "inline-flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-8)", color: "var(--color-text-secondary)" }}>
         ← Back to Home
-      </a>
+      </Link>
 
       <h1 style={{ marginBottom: "var(--space-2)" }}>Privacy Policy</h1>
       <p style={{ color: "var(--color-text-muted)", marginBottom: "var(--space-10)", fontSize: "var(--text-sm)" }}>

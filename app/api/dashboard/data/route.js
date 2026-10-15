@@ -3,17 +3,12 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
-import ws from "ws";
 
 const DB_PATH = path.join(process.cwd(), "data.json");
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey, {
-  realtime: {
-    transport: ws,
-  },
-}) : null;
+const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // --- Helper Functions ---
 function getCleanName(fullName) {
@@ -123,6 +118,77 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
+
+    // Check if adding a medication
+    if (body.type === "medication" || body.medication) {
+      const { phone, name, dosage, time, inventory } = body.medication || body;
+      if (!phone || !name) {
+        return NextResponse.json({ error: "Phone and medication name are required" }, { status: 400 });
+      }
+
+      const normalizedPhone = phone.replace(/\s+/g, "");
+
+      if (supabase) {
+        // 1. Get or create patient
+        const { data: patientData } = await supabase
+          .from("patients")
+          .upsert({ phone: normalizedPhone, name: "Patient", language: "en" }, { onConflict: "phone" })
+          .select("id")
+          .single();
+
+        if (!patientData) {
+          return NextResponse.json({ error: "Failed to resolve patient" }, { status: 500 });
+        }
+
+        // 2. Insert medication
+        const { data: medData, error: medError } = await supabase
+          .from("medications")
+          .insert({
+            patient_id: patientData.id,
+            name,
+            dosage: dosage || "1 Tab",
+            inventory: parseInt(inventory, 10) || 30,
+            instructions: "After Food"
+          })
+          .select("id")
+          .single();
+
+        if (medError) {
+          return NextResponse.json({ error: medError.message }, { status: 500 });
+        }
+
+        // 3. Insert schedule
+        if (time) {
+          await supabase.from("schedules").insert({
+            medication_id: medData.id,
+            scheduled_time: time
+          });
+        }
+
+        return NextResponse.json({ ok: true, medication: medData }, { status: 201 });
+      } else {
+        // Local JSON fallback
+        const db = await readDB();
+        if (!db.demoDoses) db.demoDoses = {};
+        if (!db.demoDoses[normalizedPhone]) db.demoDoses[normalizedPhone] = [];
+
+        const newDose = {
+          id: Date.now(),
+          name: `${name} ${dosage || ""}`.trim(),
+          time: time || "8:00 AM",
+          status: "pending",
+          logTime: null,
+          inventory: parseInt(inventory, 10) || 30
+        };
+
+        db.demoDoses[normalizedPhone].push(newDose);
+        await writeDB(db);
+
+        return NextResponse.json({ ok: true, dose: newDose }, { status: 201 });
+      }
+    }
+
+    // Default: Add patient
     const { name, phone } = body;
 
     if (!phone) {
@@ -162,7 +228,7 @@ export async function POST(request) {
     }
   } catch (error) {
     console.error("Dashboard POST error:", error);
-    return NextResponse.json({ error: "Failed to create patient" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to process request" }, { status: 500 });
   }
 }
 
