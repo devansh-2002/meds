@@ -1,6 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://dawaisaathi.com"),
   title: "DawaiSaathi — Your Medicine Companion",
   description:
     "Never miss a dose again. DawaiSaathi reminds you to take your medicines on time via WhatsApp and lets your family stay informed with a real-time adherence dashboard.",
